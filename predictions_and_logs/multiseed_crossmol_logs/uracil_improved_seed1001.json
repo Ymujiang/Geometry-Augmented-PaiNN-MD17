@@ -1,0 +1,103 @@
+{
+  "molecule": "uracil",
+  "arch": "improved",
+  "seed": 1001,
+  "split_npz": "/home/ymujdb/my_sota_project/optimized_code/painn/data/md17_uracil_split.npz",
+  "src_path": "/home/ymujdb/my_sota_project/optimized_code/painn/src",
+  "painn_py_file": "/home/ymujdb/my_sota_project/optimized_code/painn/src/schnetpack/representation/painn.py",
+  "n_atoms": 12,
+  "n_train": 950,
+  "n_val": 50,
+  "n_test": 1000,
+  "n_params": 1104769,
+  "epochs": 80,
+  "best_epoch": 80,
+  "best_val_f_mae": 0.30335974799262155,
+  "best_val_e_mae": 0.13463682174682617,
+  "test_f_mae": 0.30217322625054255,
+  "test_e_mae": 0.11962542629241943,
+  "total_time_s": 2205.209388256073,
+  "device": "cpu",
+  "val_history": [
+    {
+      "epoch": 5,
+      "val_f_mae": 2.397890896267361,
+      "val_e_mae": 1.37565673828125
+    },
+    {
+      "epoch": 10,
+      "val_f_mae": 1.5499757215711805,
+      "val_e_mae": 1.1548526000976562
+    },
+    {
+      "epoch": 15,
+      "val_f_mae": 1.0363016086154513,
+      "val_e_mae": 1.4302961730957031
+    },
+    {
+      "epoch": 20,
+      "val_f_mae": 1.012471923828125,
+      "val_e_mae": 0.30299928665161135
+    },
+    {
+      "epoch": 25,
+      "val_f_mae": 0.7798552788628472,
+      "val_e_mae": 0.6359001922607422
+    },
+    {
+      "epoch": 30,
+      "val_f_mae": 0.6885666232638888,
+      "val_e_mae": 0.5678065872192383
+    },
+    {
+      "epoch": 35,
+      "val_f_mae": 0.88168212890625,
+      "val_e_mae": 0.256547794342041
+    },
+    {
+      "epoch": 40,
+      "val_f_mae": 0.5414148627387153,
+      "val_e_mae": 0.30184480667114255
+    },
+    {
+      "epoch": 45,
+      "val_f_mae": 0.503297119140625,
+      "val_e_mae": 0.21743240356445312
+    },
+    {
+      "epoch": 50,
+      "val_f_mae": 0.4534788343641493,
+      "val_e_mae": 0.24588420867919922
+    },
+    {
+      "epoch": 55,
+      "val_f_mae": 0.4054642062717014,
+      "val_e_mae": 0.30424570083618163
+    },
+    {
+      "epoch": 60,
+      "val_f_mae": 0.35919874403211804,
+      "val_e_mae": 0.15216383934020997
+    },
+    {
+      "epoch": 65,
+      "val_f_mae": 0.3401144409179688,
+      "val_e_mae": 0.13317665100097656
+    },
+    {
+      "epoch": 70,
+      "val_f_mae": 0.3227681816948785,
+      "val_e_mae": 0.13080848693847658
+    },
+    {
+      "epoch": 75,
+      "val_f_mae": 0.3127543470594618,
+      "val_e_mae": 0.14299992561340333
+    },
+    {
+      "epoch": 80,
+      "val_f_mae": 0.30335974799262155,
+      "val_e_mae": 0.13463682174682617
+    }
+  ]
+}

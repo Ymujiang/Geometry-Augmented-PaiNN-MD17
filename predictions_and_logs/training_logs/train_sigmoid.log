@@ -1,0 +1,25 @@
+/home/ymujdb/miniconda3/envs/cgcnn_env/lib/python3.10/site-packages/torch/jit/_script.py:1491: FutureWarning: `torch.jit.script` is deprecated. Please switch to `torch.compile` or `torch.export`.
+  warnings.warn(
+/home/ymujdb/miniconda3/envs/cgcnn_env/lib/python3.10/site-packages/torch/cuda/__init__.py:1174: UserWarning: Can't initialize NVML
+  raw_cnt = _raw_device_count_nvml()
+[info] variant=sigmoid  schnetpack from: /tmp/painn_sci_src_sigmoid/src/schnetpack/__init__.py
+[info] gate activation (known from source checkout) = sigmoid
+Epoch 005/080 | Val_Force_MAE: 2.9032 | Val_Energy_MAE: 1.0720 | Time: 25.6s
+Epoch 010/080 | Val_Force_MAE: 1.4803 | Val_Energy_MAE: 0.4499 | Time: 50.6s
+Epoch 015/080 | Val_Force_MAE: 1.4296 | Val_Energy_MAE: 0.7682 | Time: 75.9s
+Epoch 020/080 | Val_Force_MAE: 1.0208 | Val_Energy_MAE: 0.2859 | Time: 101.0s
+Epoch 025/080 | Val_Force_MAE: 1.0577 | Val_Energy_MAE: 0.5075 | Time: 126.0s
+Epoch 030/080 | Val_Force_MAE: 0.8602 | Val_Energy_MAE: 0.2590 | Time: 151.5s
+Epoch 035/080 | Val_Force_MAE: 0.8414 | Val_Energy_MAE: 0.2029 | Time: 176.5s
+Epoch 040/080 | Val_Force_MAE: 0.6492 | Val_Energy_MAE: 0.1412 | Time: 204.7s
+Epoch 045/080 | Val_Force_MAE: 0.5681 | Val_Energy_MAE: 0.1728 | Time: 229.9s
+Epoch 050/080 | Val_Force_MAE: 0.5192 | Val_Energy_MAE: 0.3549 | Time: 255.7s
+Epoch 055/080 | Val_Force_MAE: 0.4942 | Val_Energy_MAE: 0.6164 | Time: 281.2s
+Epoch 060/080 | Val_Force_MAE: 0.4183 | Val_Energy_MAE: 0.1419 | Time: 306.1s
+Epoch 065/080 | Val_Force_MAE: 0.3746 | Val_Energy_MAE: 0.1245 | Time: 330.8s
+Epoch 070/080 | Val_Force_MAE: 0.3504 | Val_Energy_MAE: 0.1128 | Time: 355.0s
+Epoch 075/080 | Val_Force_MAE: 0.3373 | Val_Energy_MAE: 0.1213 | Time: 379.9s
+Epoch 080/080 | Val_Force_MAE: 0.3345 | Val_Energy_MAE: 0.1292 | Time: 404.0s
+Test_Energy_MAE: 0.1231
+Final_Test_MAE: 0.3442
+[done] variant=sigmoid 已写出 predictions_/gate_activation_/training_curve_ 到 papers/painn_sci/data/raw

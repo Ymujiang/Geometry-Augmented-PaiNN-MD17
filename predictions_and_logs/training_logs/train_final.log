@@ -1,0 +1,27 @@
+/home/ymujdb/miniconda3/envs/cgcnn_env/lib/python3.10/site-packages/torch/jit/_script.py:1491: FutureWarning: `torch.jit.script` is deprecated. Please switch to `torch.compile` or `torch.export`.
+  warnings.warn(
+/home/ymujdb/.config/matplotlib is not a writable directory
+Matplotlib created a temporary cache directory at /tmp/matplotlib-5i7tni1f because there was an issue with the default path (/home/ymujdb/.config/matplotlib); it is highly recommended to set the MPLCONFIGDIR environment variable to a writable directory, in particular to speed up the import of Matplotlib and to better support multiprocessing.
+/home/ymujdb/miniconda3/envs/cgcnn_env/lib/python3.10/site-packages/torch/cuda/__init__.py:1174: UserWarning: Can't initialize NVML
+  raw_cnt = _raw_device_count_nvml()
+[info] variant=final  schnetpack from: /home/ymujdb/my_sota_project/optimized_code/painn/src/schnetpack/__init__.py
+[info] gate activation (known from source checkout) = tanh
+Epoch 005/080 | Val_Force_MAE: 2.5647 | Val_Energy_MAE: 4.0642 | Time: 1844.2s
+Epoch 010/080 | Val_Force_MAE: 1.5922 | Val_Energy_MAE: 0.7911 | Time: 3587.8s
+Epoch 015/080 | Val_Force_MAE: 1.2012 | Val_Energy_MAE: 0.8283 | Time: 5362.5s
+Epoch 020/080 | Val_Force_MAE: 1.1740 | Val_Energy_MAE: 0.5311 | Time: 7097.7s
+Epoch 025/080 | Val_Force_MAE: 0.7899 | Val_Energy_MAE: 0.2831 | Time: 8845.6s
+Epoch 030/080 | Val_Force_MAE: 0.8397 | Val_Energy_MAE: 0.4812 | Time: 10600.9s
+Epoch 035/080 | Val_Force_MAE: 0.7244 | Val_Energy_MAE: 0.5812 | Time: 12378.4s
+Epoch 040/080 | Val_Force_MAE: 0.5698 | Val_Energy_MAE: 0.4583 | Time: 14125.5s
+Epoch 045/080 | Val_Force_MAE: 0.5180 | Val_Energy_MAE: 0.1994 | Time: 15836.7s
+Epoch 050/080 | Val_Force_MAE: 0.4390 | Val_Energy_MAE: 0.2017 | Time: 17574.7s
+Epoch 055/080 | Val_Force_MAE: 0.3815 | Val_Energy_MAE: 0.1493 | Time: 19364.8s
+Epoch 060/080 | Val_Force_MAE: 0.3760 | Val_Energy_MAE: 0.2474 | Time: 21127.3s
+Epoch 065/080 | Val_Force_MAE: 0.3514 | Val_Energy_MAE: 0.1695 | Time: 22855.4s
+Epoch 070/080 | Val_Force_MAE: 0.3059 | Val_Energy_MAE: 0.1241 | Time: 24598.6s
+Epoch 075/080 | Val_Force_MAE: 0.2973 | Val_Energy_MAE: 0.1304 | Time: 26327.0s
+Epoch 080/080 | Val_Force_MAE: 0.2924 | Val_Energy_MAE: 0.1314 | Time: 28090.4s
+Test_Energy_MAE: 0.1185
+Final_Test_MAE: 0.3024
+[done] variant=final 已写出 predictions_/gate_activation_/training_curve_ 到 papers/painn_sci/data/raw

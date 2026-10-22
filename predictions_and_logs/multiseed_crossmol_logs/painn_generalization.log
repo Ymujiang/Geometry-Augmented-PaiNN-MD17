@@ -1,0 +1,351 @@
+================================================================================
+PaiNN Debiasing & Cross-Molecule Generalization Supplemental Experiment
+Addressing Final Review Recommendation #5 (终审建议第5项)
+================================================================================
+Objective:
+  Phase A - Uracil independent multi-seed validation (eliminate single-seed luck)
+  Phase B - Zero-tuning cross-molecule generalization test (eliminate architecture-
+            selection bias)
+
+Protocol provenance (identical to protected optimized_code/painn/eval_benchmark.py):
+  cutoff=5.0, n_atom_basis=128, n_interactions=3, batch_size=32, epochs=80
+  AdamW(lr=1e-3, weight_decay=0.0), CosineAnnealingLR(T_max=80, eta_min=1e-5)
+  loss = 0.01*MSE_E + 0.99*MSE_F, grad_clip max_norm=10.0
+  Validation every 5 epochs on val Force MAE; best checkpoint kept in memory;
+  single final test-set evaluation at the end.
+
+Architecture provenance:
+  "improved" = current HEAD of optimized_code/painn (git tag _best = c5c1199498,
+      iter-7 tanh-gate PaiNN: bidirectional qi/qj message + 3-body geometric
+      gating + tanh gate), code at optimized_code/painn/src (UNMODIFIED).
+  "baseline" = original PaiNNInteraction/PaiNNMixing at git tag _baseline,
+      isolated into scripts/painn_generalization/baseline_src (verified
+      byte-for-byte identical to the _baseline tag; diff-confirmed to differ
+      from the improved HEAD only in painn.py).
+  Both architectures run via scripts/painn_generalization/run_experiment.py,
+  a thin parameterized wrapper that reproduces eval_benchmark.py's protocol
+  line-for-line (protected eval_benchmark.py and data/md17_uracil_split.npz
+  are NEVER modified).
+
+Hardware disclosure:
+  nvidia-smi and torch.cuda.is_available() both confirm NO GPU is present in
+  this execution environment, contradicting the premise of "current GPU" in
+  the task description. ALL runs below execute on CPU only
+  (/home/ymujdb/miniconda3/envs/cgcnn_env, 24 logical cores, 4 threads/run,
+  up to 6 runs executed concurrently).
+
+Phase A molecule/split: Uracil, data/md17_uracil_split.npz (PROTECTED, untouched,
+  sha256=3a8621f721498eed104cbced963f30895a361f11d53193846acb6929b0f85910).
+  Seeds: 1001, 1002, 1003 (none used during the original architecture search,
+  which used seed=42 per eval_benchmark.py's hardcoded set_seed(42)).
+
+Phase B molecules (never used during architecture search):
+  - Ethanol  (C2H6O, 9 atoms)  split: data_cache/generalization_splits/md17_ethanol_split.npz
+  - Aspirin  (C9H8O4, 21 atoms) split: data_cache/generalization_splits/md17_aspirin_split.npz
+  Both splits use the same 950/50/1000 train/val/test convention as Uracil's
+  protected split, random index-based partitioning of the full MD17 GDML
+  trajectory, fixed disjoint train/val/test index sets (verified zero exact-
+  geometry overlap across partitions, by direct coordinate-set intersection).
+  Seed for Phase B runs: 42 (matches the original architecture-search seed,
+  since Phase B's purpose is to test zero-tuning transfer, not seed variance).
+
+================================================================================
+2026-10-21 17:18:33 [uracil|baseline|seed=1001] RUN START host=DESKTOP-I2244MR src_path=scripts/painn_generalization/baseline_src split=optimized_code/painn/data/md17_uracil_split.npz threads=2 painn_module_file=/home/ymujdb/my_sota_project/scripts/painn_generalization/baseline_src/schnetpack/representation/__init__.py
+2026-10-21 17:18:33 [uracil|baseline|seed=1001] resolved painn.py = /home/ymujdb/my_sota_project/scripts/painn_generalization/baseline_src/schnetpack/representation/painn.py
+2026-10-21 17:18:33 [uracil|baseline|seed=1001] device = cpu
+2026-10-21 17:18:33 [uracil|baseline|seed=1001] n_atoms=12 train=950 val=50 test=1000 z=[6, 6, 7, 6, 7, 6, 8, 8, 1, 1, 1, 1]
+2026-10-21 17:18:33 [uracil|baseline|seed=1001] n_params=589057
+2026-10-21 17:19:05 [uracil|improved|seed=1001] RUN START host=DESKTOP-I2244MR src_path=optimized_code/painn/src split=optimized_code/painn/data/md17_uracil_split.npz threads=2 painn_module_file=/home/ymujdb/my_sota_project/optimized_code/painn/src/schnetpack/representation/__init__.py
+2026-10-21 17:19:05 [uracil|improved|seed=1001] resolved painn.py = /home/ymujdb/my_sota_project/optimized_code/painn/src/schnetpack/representation/painn.py
+2026-10-21 17:19:05 [uracil|improved|seed=1001] device = cpu
+2026-10-21 17:19:05 [uracil|improved|seed=1001] n_atoms=12 train=950 val=50 test=1000 z=[6, 6, 7, 6, 7, 6, 8, 8, 1, 1, 1, 1]
+2026-10-21 17:19:05 [uracil|improved|seed=1001] n_params=1104769
+2026-10-21 17:19:07 [uracil|baseline|seed=1001] Epoch 005/080 | Val_Force_MAE: 3.0471 | Val_Energy_MAE: 10.4033 | Time: 34.0s  <- new best
+2026-10-21 17:19:12 [uracil|baseline|seed=1002] RUN START host=DESKTOP-I2244MR src_path=scripts/painn_generalization/baseline_src split=optimized_code/painn/data/md17_uracil_split.npz threads=2 painn_module_file=/home/ymujdb/my_sota_project/scripts/painn_generalization/baseline_src/schnetpack/representation/__init__.py
+2026-10-21 17:19:12 [uracil|baseline|seed=1002] resolved painn.py = /home/ymujdb/my_sota_project/scripts/painn_generalization/baseline_src/schnetpack/representation/painn.py
+2026-10-21 17:19:12 [uracil|baseline|seed=1002] device = cpu
+2026-10-21 17:19:12 [uracil|baseline|seed=1002] n_atoms=12 train=950 val=50 test=1000 z=[6, 6, 7, 6, 7, 6, 8, 8, 1, 1, 1, 1]
+2026-10-21 17:19:12 [uracil|baseline|seed=1002] n_params=589057
+2026-10-21 17:19:22 [uracil|improved|seed=1002] RUN START host=DESKTOP-I2244MR src_path=optimized_code/painn/src split=optimized_code/painn/data/md17_uracil_split.npz threads=2 painn_module_file=/home/ymujdb/my_sota_project/optimized_code/painn/src/schnetpack/representation/__init__.py
+2026-10-21 17:19:22 [uracil|improved|seed=1002] resolved painn.py = /home/ymujdb/my_sota_project/optimized_code/painn/src/schnetpack/representation/painn.py
+2026-10-21 17:19:22 [uracil|improved|seed=1002] device = cpu
+2026-10-21 17:19:22 [uracil|improved|seed=1002] n_atoms=12 train=950 val=50 test=1000 z=[6, 6, 7, 6, 7, 6, 8, 8, 1, 1, 1, 1]
+2026-10-21 17:19:22 [uracil|improved|seed=1002] n_params=1104769
+2026-10-21 17:19:33 [uracil|baseline|seed=1003] RUN START host=DESKTOP-I2244MR src_path=scripts/painn_generalization/baseline_src split=optimized_code/painn/data/md17_uracil_split.npz threads=2 painn_module_file=/home/ymujdb/my_sota_project/scripts/painn_generalization/baseline_src/schnetpack/representation/__init__.py
+2026-10-21 17:19:33 [uracil|baseline|seed=1003] resolved painn.py = /home/ymujdb/my_sota_project/scripts/painn_generalization/baseline_src/schnetpack/representation/painn.py
+2026-10-21 17:19:33 [uracil|baseline|seed=1003] device = cpu
+2026-10-21 17:19:33 [uracil|baseline|seed=1003] n_atoms=12 train=950 val=50 test=1000 z=[6, 6, 7, 6, 7, 6, 8, 8, 1, 1, 1, 1]
+2026-10-21 17:19:33 [uracil|baseline|seed=1003] n_params=589057
+2026-10-21 17:19:42 [uracil|improved|seed=1003] RUN START host=DESKTOP-I2244MR src_path=optimized_code/painn/src split=optimized_code/painn/data/md17_uracil_split.npz threads=2 painn_module_file=/home/ymujdb/my_sota_project/optimized_code/painn/src/schnetpack/representation/__init__.py
+2026-10-21 17:19:42 [uracil|improved|seed=1003] resolved painn.py = /home/ymujdb/my_sota_project/optimized_code/painn/src/schnetpack/representation/painn.py
+2026-10-21 17:19:42 [uracil|improved|seed=1003] device = cpu
+2026-10-21 17:19:42 [uracil|improved|seed=1003] n_atoms=12 train=950 val=50 test=1000 z=[6, 6, 7, 6, 7, 6, 8, 8, 1, 1, 1, 1]
+2026-10-21 17:19:42 [uracil|improved|seed=1003] n_params=1104769
+2026-10-21 17:19:47 [uracil|baseline|seed=1001] Epoch 010/080 | Val_Force_MAE: 3.0599 | Val_Energy_MAE: 15.4594 | Time: 74.0s
+2026-10-21 17:19:50 [ethanol|baseline|seed=42] RUN START host=DESKTOP-I2244MR src_path=scripts/painn_generalization/baseline_src split=data_cache/generalization_splits/md17_ethanol_split.npz threads=2 painn_module_file=/home/ymujdb/my_sota_project/scripts/painn_generalization/baseline_src/schnetpack/representation/__init__.py
+2026-10-21 17:19:50 [ethanol|baseline|seed=42] resolved painn.py = /home/ymujdb/my_sota_project/scripts/painn_generalization/baseline_src/schnetpack/representation/painn.py
+2026-10-21 17:19:50 [ethanol|baseline|seed=42] device = cpu
+2026-10-21 17:19:50 [ethanol|baseline|seed=42] n_atoms=9 train=950 val=50 test=1000 z=[6, 6, 8, 1, 1, 1, 1, 1, 1]
+2026-10-21 17:19:50 [ethanol|baseline|seed=42] n_params=589057
+2026-10-21 17:19:56 [uracil|baseline|seed=1002] Epoch 005/080 | Val_Force_MAE: 2.8874 | Val_Energy_MAE: 15.3160 | Time: 44.1s  <- new best
+2026-10-21 17:20:13 [ethanol|improved|seed=42] RUN START host=DESKTOP-I2244MR src_path=optimized_code/painn/src split=data_cache/generalization_splits/md17_ethanol_split.npz threads=2 painn_module_file=/home/ymujdb/my_sota_project/optimized_code/painn/src/schnetpack/representation/__init__.py
+2026-10-21 17:20:13 [ethanol|improved|seed=42] resolved painn.py = /home/ymujdb/my_sota_project/optimized_code/painn/src/schnetpack/representation/painn.py
+2026-10-21 17:20:13 [ethanol|improved|seed=42] device = cpu
+2026-10-21 17:20:13 [ethanol|improved|seed=42] n_atoms=9 train=950 val=50 test=1000 z=[6, 6, 8, 1, 1, 1, 1, 1, 1]
+2026-10-21 17:20:13 [ethanol|improved|seed=42] n_params=1104769
+2026-10-21 17:20:20 [aspirin|baseline|seed=42] RUN START host=DESKTOP-I2244MR src_path=scripts/painn_generalization/baseline_src split=data_cache/generalization_splits/md17_aspirin_split.npz threads=2 painn_module_file=/home/ymujdb/my_sota_project/scripts/painn_generalization/baseline_src/schnetpack/representation/__init__.py
+2026-10-21 17:20:20 [aspirin|baseline|seed=42] resolved painn.py = /home/ymujdb/my_sota_project/scripts/painn_generalization/baseline_src/schnetpack/representation/painn.py
+2026-10-21 17:20:20 [aspirin|baseline|seed=42] device = cpu
+2026-10-21 17:20:20 [aspirin|baseline|seed=42] n_atoms=21 train=950 val=50 test=1000 z=[6, 6, 6, 6, 6, 6, 6, 8, 8, 8, 6, 6, 8, 1, 1, 1, 1, 1, 1, 1, 1]
+2026-10-21 17:20:20 [aspirin|baseline|seed=42] n_params=589057
+2026-10-21 17:20:27 [ethanol|baseline|seed=42] Epoch 005/080 | Val_Force_MAE: 2.4960 | Val_Energy_MAE: 0.7473 | Time: 36.3s  <- new best
+2026-10-21 17:20:29 [aspirin|improved|seed=42] RUN START host=DESKTOP-I2244MR src_path=optimized_code/painn/src split=data_cache/generalization_splits/md17_aspirin_split.npz threads=2 painn_module_file=/home/ymujdb/my_sota_project/optimized_code/painn/src/schnetpack/representation/__init__.py
+2026-10-21 17:20:29 [aspirin|improved|seed=42] resolved painn.py = /home/ymujdb/my_sota_project/optimized_code/painn/src/schnetpack/representation/painn.py
+2026-10-21 17:20:29 [aspirin|improved|seed=42] device = cpu
+2026-10-21 17:20:29 [aspirin|improved|seed=42] n_atoms=21 train=950 val=50 test=1000 z=[6, 6, 6, 6, 6, 6, 6, 8, 8, 8, 6, 6, 8, 1, 1, 1, 1, 1, 1, 1, 1]
+2026-10-21 17:20:29 [aspirin|improved|seed=42] n_params=1104769
+2026-10-21 17:20:30 [uracil|baseline|seed=1003] Epoch 005/080 | Val_Force_MAE: 3.1802 | Val_Energy_MAE: 30.0286 | Time: 57.2s  <- new best
+2026-10-21 17:20:53 [uracil|baseline|seed=1001] Epoch 015/080 | Val_Force_MAE: 1.7308 | Val_Energy_MAE: 15.5586 | Time: 140.6s  <- new best
+2026-10-21 17:21:09 [uracil|baseline|seed=1002] Epoch 010/080 | Val_Force_MAE: 2.3105 | Val_Energy_MAE: 4.6537 | Time: 117.1s  <- new best
+2026-10-21 17:21:12 [uracil|improved|seed=1001] Epoch 005/080 | Val_Force_MAE: 2.3979 | Val_Energy_MAE: 1.3757 | Time: 127.2s  <- new best
+2026-10-21 17:21:16 [ethanol|baseline|seed=42] Epoch 010/080 | Val_Force_MAE: 1.6242 | Val_Energy_MAE: 0.4840 | Time: 85.4s  <- new best
+2026-10-21 17:21:53 [uracil|baseline|seed=1003] Epoch 010/080 | Val_Force_MAE: 3.3807 | Val_Energy_MAE: 0.7756 | Time: 140.5s
+2026-10-21 17:21:55 [uracil|improved|seed=1002] Epoch 005/080 | Val_Force_MAE: 2.1776 | Val_Energy_MAE: 1.4035 | Time: 153.2s  <- new best
+2026-10-21 17:21:59 [ethanol|improved|seed=42] Epoch 005/080 | Val_Force_MAE: 2.1895 | Val_Energy_MAE: 2.6259 | Time: 106.6s  <- new best
+2026-10-21 17:22:03 [ethanol|baseline|seed=42] Epoch 015/080 | Val_Force_MAE: 1.2970 | Val_Energy_MAE: 0.4032 | Time: 132.7s  <- new best
+2026-10-21 17:22:09 [uracil|baseline|seed=1001] NOTE: first launch attempt was accidentally cancelled by operator tooling before completion; relaunching from epoch 0 cleanly below.
+2026-10-21 17:22:17 [uracil|baseline|seed=1001] RUN START host=DESKTOP-I2244MR src_path=scripts/painn_generalization/baseline_src split=optimized_code/painn/data/md17_uracil_split.npz threads=2 painn_module_file=/home/ymujdb/my_sota_project/scripts/painn_generalization/baseline_src/schnetpack/representation/__init__.py
+2026-10-21 17:22:17 [uracil|baseline|seed=1001] resolved painn.py = /home/ymujdb/my_sota_project/scripts/painn_generalization/baseline_src/schnetpack/representation/painn.py
+2026-10-21 17:22:17 [uracil|baseline|seed=1001] device = cpu
+2026-10-21 17:22:17 [uracil|baseline|seed=1001] n_atoms=12 train=950 val=50 test=1000 z=[6, 6, 7, 6, 7, 6, 8, 8, 1, 1, 1, 1]
+2026-10-21 17:22:17 [uracil|baseline|seed=1001] n_params=589057
+2026-10-21 17:22:29 [uracil|baseline|seed=1002] Epoch 015/080 | Val_Force_MAE: 1.5639 | Val_Energy_MAE: 7.6554 | Time: 196.9s  <- new best
+2026-10-21 17:22:35 [uracil|improved|seed=1003] Epoch 005/080 | Val_Force_MAE: 2.9692 | Val_Energy_MAE: 0.9681 | Time: 173.3s  <- new best
+2026-10-21 17:22:51 [ethanol|baseline|seed=42] Epoch 020/080 | Val_Force_MAE: 1.3706 | Val_Energy_MAE: 4.2883 | Time: 180.8s
+2026-10-21 17:23:15 [uracil|baseline|seed=1003] Epoch 015/080 | Val_Force_MAE: 1.4391 | Val_Energy_MAE: 10.9984 | Time: 221.8s  <- new best
+2026-10-21 17:23:26 [aspirin|baseline|seed=42] Epoch 005/080 | Val_Force_MAE: 2.9453 | Val_Energy_MAE: 20.7279 | Time: 185.5s  <- new best
+2026-10-21 17:23:41 [ethanol|baseline|seed=42] Epoch 025/080 | Val_Force_MAE: 1.2330 | Val_Energy_MAE: 0.2694 | Time: 230.7s  <- new best
+2026-10-21 17:23:43 [uracil|baseline|seed=1001] Epoch 005/080 | Val_Force_MAE: 3.0471 | Val_Energy_MAE: 10.4033 | Time: 86.4s  <- new best
+2026-10-21 17:23:49 [ethanol|improved|seed=42] Epoch 010/080 | Val_Force_MAE: 1.4764 | Val_Energy_MAE: 0.4432 | Time: 216.0s  <- new best
+2026-10-21 17:23:52 [uracil|baseline|seed=1002] Epoch 020/080 | Val_Force_MAE: 1.3842 | Val_Energy_MAE: 11.3705 | Time: 280.6s  <- new best
+2026-10-21 17:24:23 [uracil|improved|seed=1001] Epoch 010/080 | Val_Force_MAE: 1.5500 | Val_Energy_MAE: 1.1549 | Time: 318.4s  <- new best
+2026-10-21 17:24:31 [ethanol|baseline|seed=42] Epoch 030/080 | Val_Force_MAE: 1.1291 | Val_Energy_MAE: 2.1557 | Time: 280.2s  <- new best
+2026-10-21 17:24:38 [uracil|baseline|seed=1003] Epoch 020/080 | Val_Force_MAE: 1.4412 | Val_Energy_MAE: 4.5541 | Time: 305.4s
+2026-10-21 17:25:06 [uracil|improved|seed=1002] Epoch 010/080 | Val_Force_MAE: 1.5759 | Val_Energy_MAE: 0.6726 | Time: 344.3s  <- new best
+2026-10-21 17:25:09 [uracil|baseline|seed=1001] Epoch 010/080 | Val_Force_MAE: 3.0599 | Val_Energy_MAE: 15.4594 | Time: 172.0s
+2026-10-21 17:25:15 [uracil|baseline|seed=1002] Epoch 025/080 | Val_Force_MAE: 1.5612 | Val_Energy_MAE: 2.9242 | Time: 363.7s
+2026-10-21 17:25:20 [ethanol|baseline|seed=42] Epoch 035/080 | Val_Force_MAE: 1.0642 | Val_Energy_MAE: 0.2771 | Time: 329.7s  <- new best
+2026-10-21 17:25:39 [ethanol|improved|seed=42] Epoch 015/080 | Val_Force_MAE: 1.4996 | Val_Energy_MAE: 1.7557 | Time: 326.0s
+2026-10-21 17:25:50 [uracil|improved|seed=1003] Epoch 010/080 | Val_Force_MAE: 1.5845 | Val_Energy_MAE: 1.3197 | Time: 367.8s  <- new best
+2026-10-21 17:26:02 [uracil|baseline|seed=1003] Epoch 025/080 | Val_Force_MAE: 1.3604 | Val_Energy_MAE: 9.9866 | Time: 389.3s  <- new best
+2026-10-21 17:26:09 [ethanol|baseline|seed=42] Epoch 040/080 | Val_Force_MAE: 0.7916 | Val_Energy_MAE: 0.4065 | Time: 378.9s  <- new best
+2026-10-21 17:26:35 [uracil|baseline|seed=1001] Epoch 015/080 | Val_Force_MAE: 1.7308 | Val_Energy_MAE: 15.5586 | Time: 258.0s  <- new best
+2026-10-21 17:26:35 [aspirin|baseline|seed=42] Epoch 010/080 | Val_Force_MAE: 3.2133 | Val_Energy_MAE: 4.0350 | Time: 374.8s
+2026-10-21 17:26:39 [uracil|baseline|seed=1002] Epoch 030/080 | Val_Force_MAE: 0.9755 | Val_Energy_MAE: 4.0274 | Time: 447.5s  <- new best
+2026-10-21 17:26:59 [ethanol|baseline|seed=42] Epoch 045/080 | Val_Force_MAE: 0.7198 | Val_Energy_MAE: 0.2062 | Time: 428.5s  <- new best
+2026-10-21 17:27:26 [uracil|baseline|seed=1003] Epoch 030/080 | Val_Force_MAE: 1.3555 | Val_Energy_MAE: 3.9453 | Time: 473.2s  <- new best
+2026-10-21 17:27:29 [ethanol|improved|seed=42] Epoch 020/080 | Val_Force_MAE: 1.0407 | Val_Energy_MAE: 0.7635 | Time: 436.3s  <- new best
+2026-10-21 17:27:37 [uracil|improved|seed=1001] Epoch 015/080 | Val_Force_MAE: 1.0363 | Val_Energy_MAE: 1.4303 | Time: 512.8s  <- new best
+2026-10-21 17:27:42 [aspirin|improved|seed=42] Epoch 005/080 | Val_Force_MAE: 2.3542 | Val_Energy_MAE: 1.2379 | Time: 433.7s  <- new best
+2026-10-21 17:27:49 [ethanol|baseline|seed=42] Epoch 050/080 | Val_Force_MAE: 0.6448 | Val_Energy_MAE: 2.0666 | Time: 478.1s  <- new best
+2026-10-21 17:28:00 [uracil|baseline|seed=1001] Epoch 020/080 | Val_Force_MAE: 1.7370 | Val_Energy_MAE: 0.8457 | Time: 342.9s
+2026-10-21 17:28:03 [uracil|baseline|seed=1002] Epoch 035/080 | Val_Force_MAE: 0.9801 | Val_Energy_MAE: 6.7770 | Time: 531.2s
+2026-10-21 17:28:19 [uracil|improved|seed=1002] Epoch 015/080 | Val_Force_MAE: 1.1627 | Val_Energy_MAE: 0.4977 | Time: 537.4s  <- new best
+2026-10-21 17:28:38 [ethanol|baseline|seed=42] Epoch 055/080 | Val_Force_MAE: 0.5854 | Val_Energy_MAE: 1.1628 | Time: 527.8s  <- new best
+2026-10-21 17:28:50 [uracil|baseline|seed=1003] Epoch 035/080 | Val_Force_MAE: 1.1159 | Val_Energy_MAE: 1.5459 | Time: 557.7s  <- new best
+2026-10-21 17:29:05 [uracil|improved|seed=1003] Epoch 015/080 | Val_Force_MAE: 1.2149 | Val_Energy_MAE: 0.4387 | Time: 563.2s  <- new best
+2026-10-21 17:29:20 [ethanol|improved|seed=42] Epoch 025/080 | Val_Force_MAE: 0.7967 | Val_Energy_MAE: 0.2647 | Time: 547.0s  <- new best
+2026-10-21 17:29:24 [uracil|baseline|seed=1001] Epoch 025/080 | Val_Force_MAE: 1.2201 | Val_Energy_MAE: 6.6782 | Time: 427.0s  <- new best
+2026-10-21 17:29:26 [uracil|baseline|seed=1002] Epoch 040/080 | Val_Force_MAE: 1.0033 | Val_Energy_MAE: 1.2047 | Time: 614.6s
+2026-10-21 17:29:28 [ethanol|baseline|seed=42] Epoch 060/080 | Val_Force_MAE: 0.5487 | Val_Energy_MAE: 0.1508 | Time: 577.1s  <- new best
+2026-10-21 17:29:42 [aspirin|baseline|seed=42] Epoch 015/080 | Val_Force_MAE: 2.0026 | Val_Energy_MAE: 32.0861 | Time: 561.9s  <- new best
+2026-10-21 17:30:15 [uracil|baseline|seed=1003] Epoch 040/080 | Val_Force_MAE: 1.0346 | Val_Energy_MAE: 0.9918 | Time: 641.8s  <- new best
+2026-10-21 17:30:17 [ethanol|baseline|seed=42] Epoch 065/080 | Val_Force_MAE: 0.5568 | Val_Energy_MAE: 0.4058 | Time: 626.6s
+2026-10-21 17:30:48 [uracil|baseline|seed=1001] Epoch 030/080 | Val_Force_MAE: 1.0090 | Val_Energy_MAE: 1.2032 | Time: 511.2s  <- new best
+2026-10-21 17:30:50 [uracil|baseline|seed=1002] Epoch 045/080 | Val_Force_MAE: 0.7463 | Val_Energy_MAE: 0.2408 | Time: 697.9s  <- new best
+2026-10-21 17:30:51 [uracil|improved|seed=1001] Epoch 020/080 | Val_Force_MAE: 1.0125 | Val_Energy_MAE: 0.3030 | Time: 706.5s  <- new best
+2026-10-21 17:31:07 [ethanol|baseline|seed=42] Epoch 070/080 | Val_Force_MAE: 0.4852 | Val_Energy_MAE: 0.1279 | Time: 676.3s  <- new best
+2026-10-21 17:31:10 [ethanol|improved|seed=42] Epoch 030/080 | Val_Force_MAE: 0.7751 | Val_Energy_MAE: 0.1939 | Time: 657.0s  <- new best
+2026-10-21 17:31:31 [uracil|improved|seed=1002] Epoch 020/080 | Val_Force_MAE: 0.9529 | Val_Energy_MAE: 1.1136 | Time: 729.3s  <- new best
+2026-10-21 17:31:38 [uracil|baseline|seed=1003] Epoch 045/080 | Val_Force_MAE: 0.9112 | Val_Energy_MAE: 3.1922 | Time: 725.4s  <- new best
+2026-10-21 17:31:56 [ethanol|baseline|seed=42] Epoch 075/080 | Val_Force_MAE: 0.4718 | Val_Energy_MAE: 0.1001 | Time: 725.3s  <- new best
+2026-10-21 17:32:13 [uracil|baseline|seed=1002] Epoch 050/080 | Val_Force_MAE: 0.6117 | Val_Energy_MAE: 0.2417 | Time: 780.8s  <- new best
+2026-10-21 17:32:14 [uracil|baseline|seed=1001] Epoch 035/080 | Val_Force_MAE: 1.0222 | Val_Energy_MAE: 2.6263 | Time: 596.8s
+2026-10-21 17:32:20 [uracil|improved|seed=1003] Epoch 020/080 | Val_Force_MAE: 1.1243 | Val_Energy_MAE: 0.3129 | Time: 757.6s  <- new best
+2026-10-21 17:32:45 [ethanol|baseline|seed=42] Epoch 080/080 | Val_Force_MAE: 0.4633 | Val_Energy_MAE: 0.0949 | Time: 774.9s  <- new best
+2026-10-21 17:32:49 [ethanol|baseline|seed=42] Test_Energy_MAE: 0.1138
+2026-10-21 17:32:49 [ethanol|baseline|seed=42] Final_Test_MAE: 0.4861
+2026-10-21 17:32:49 [ethanol|baseline|seed=42] RUN END best_epoch=80 best_val_f_mae=0.4633 test_f_mae=0.4861 test_e_mae=0.1138 total_time_s=778.5
+2026-10-21 17:32:49 [ethanol|baseline|seed=42] result written to scripts/painn_generalization/results/ethanol_baseline_seed42.json
+2026-10-21 17:32:52 [aspirin|baseline|seed=42] Epoch 020/080 | Val_Force_MAE: 1.5257 | Val_Energy_MAE: 13.3504 | Time: 752.0s  <- new best
+2026-10-21 17:32:58 [ethanol|improved|seed=42] Epoch 035/080 | Val_Force_MAE: 0.6814 | Val_Energy_MAE: 0.1343 | Time: 765.5s  <- new best
+2026-10-21 17:33:00 [uracil|baseline|seed=1003] Epoch 050/080 | Val_Force_MAE: 0.6871 | Val_Energy_MAE: 3.1562 | Time: 807.8s  <- new best
+2026-10-21 17:33:30 [uracil|baseline|seed=1002] Epoch 055/080 | Val_Force_MAE: 0.6269 | Val_Energy_MAE: 0.3940 | Time: 858.5s
+2026-10-21 17:33:34 [uracil|baseline|seed=1001] Epoch 040/080 | Val_Force_MAE: 0.9475 | Val_Energy_MAE: 2.4176 | Time: 676.6s  <- new best
+2026-10-21 17:33:57 [uracil|improved|seed=1001] Epoch 025/080 | Val_Force_MAE: 0.7799 | Val_Energy_MAE: 0.6359 | Time: 892.1s  <- new best
+2026-10-21 17:34:14 [uracil|baseline|seed=1003] Epoch 055/080 | Val_Force_MAE: 0.6705 | Val_Energy_MAE: 0.5321 | Time: 881.6s  <- new best
+2026-10-21 17:34:33 [uracil|improved|seed=1002] Epoch 025/080 | Val_Force_MAE: 0.9168 | Val_Energy_MAE: 0.5332 | Time: 910.8s  <- new best
+2026-10-21 17:34:36 [ethanol|improved|seed=42] Epoch 040/080 | Val_Force_MAE: 0.5284 | Val_Energy_MAE: 0.1031 | Time: 863.2s  <- new best
+2026-10-21 17:34:44 [uracil|baseline|seed=1002] Epoch 060/080 | Val_Force_MAE: 0.5664 | Val_Energy_MAE: 0.2779 | Time: 932.1s  <- new best
+2026-10-21 17:34:44 [aspirin|improved|seed=42] Epoch 010/080 | Val_Force_MAE: 1.8853 | Val_Energy_MAE: 1.6263 | Time: 855.8s  <- new best
+2026-10-21 17:34:49 [uracil|baseline|seed=1001] Epoch 045/080 | Val_Force_MAE: 0.8889 | Val_Energy_MAE: 3.1884 | Time: 752.5s  <- new best
+2026-10-21 17:35:17 [uracil|improved|seed=1003] Epoch 025/080 | Val_Force_MAE: 1.0337 | Val_Energy_MAE: 0.8607 | Time: 935.1s  <- new best
+2026-10-21 17:35:29 [uracil|baseline|seed=1003] Epoch 060/080 | Val_Force_MAE: 0.5339 | Val_Energy_MAE: 1.0305 | Time: 956.5s  <- new best
+2026-10-21 17:35:43 [aspirin|baseline|seed=42] Epoch 025/080 | Val_Force_MAE: 1.7061 | Val_Energy_MAE: 5.4951 | Time: 922.6s
+2026-10-21 17:35:58 [uracil|baseline|seed=1002] Epoch 065/080 | Val_Force_MAE: 0.5092 | Val_Energy_MAE: 1.0500 | Time: 1005.9s  <- new best
+2026-10-21 17:36:06 [uracil|baseline|seed=1001] Epoch 050/080 | Val_Force_MAE: 0.7113 | Val_Energy_MAE: 0.1631 | Time: 829.1s  <- new best
+2026-10-21 17:36:14 [ethanol|improved|seed=42] Epoch 045/080 | Val_Force_MAE: 0.5448 | Val_Energy_MAE: 0.2352 | Time: 961.6s
+2026-10-21 17:36:43 [uracil|baseline|seed=1003] Epoch 065/080 | Val_Force_MAE: 0.5098 | Val_Energy_MAE: 0.6124 | Time: 1029.9s  <- new best
+2026-10-21 17:36:50 [uracil|improved|seed=1001] Epoch 030/080 | Val_Force_MAE: 0.6886 | Val_Energy_MAE: 0.5678 | Time: 1065.0s  <- new best
+2026-10-21 17:37:11 [uracil|baseline|seed=1002] Epoch 070/080 | Val_Force_MAE: 0.4905 | Val_Energy_MAE: 0.5486 | Time: 1079.3s  <- new best
+2026-10-21 17:37:22 [uracil|baseline|seed=1001] Epoch 055/080 | Val_Force_MAE: 0.6430 | Val_Energy_MAE: 1.1412 | Time: 904.9s  <- new best
+2026-10-21 17:37:26 [uracil|improved|seed=1002] Epoch 030/080 | Val_Force_MAE: 0.8686 | Val_Energy_MAE: 0.4164 | Time: 1084.0s  <- new best
+2026-10-21 17:37:51 [ethanol|improved|seed=42] Epoch 050/080 | Val_Force_MAE: 0.4539 | Val_Energy_MAE: 0.1077 | Time: 1058.9s  <- new best
+2026-10-21 17:37:57 [uracil|baseline|seed=1003] Epoch 070/080 | Val_Force_MAE: 0.4913 | Val_Energy_MAE: 0.3413 | Time: 1103.9s  <- new best
+2026-10-21 17:38:11 [uracil|improved|seed=1003] Epoch 030/080 | Val_Force_MAE: 0.9446 | Val_Energy_MAE: 0.2123 | Time: 1108.9s  <- new best
+2026-10-21 17:38:25 [uracil|baseline|seed=1002] Epoch 075/080 | Val_Force_MAE: 0.4777 | Val_Energy_MAE: 0.2147 | Time: 1153.0s  <- new best
+2026-10-21 17:38:31 [aspirin|baseline|seed=42] Epoch 030/080 | Val_Force_MAE: 1.4670 | Val_Energy_MAE: 1.0039 | Time: 1091.3s  <- new best
+2026-10-21 17:38:39 [uracil|baseline|seed=1001] Epoch 060/080 | Val_Force_MAE: 0.5934 | Val_Energy_MAE: 0.1550 | Time: 981.8s  <- new best
+2026-10-21 17:39:11 [uracil|baseline|seed=1003] Epoch 075/080 | Val_Force_MAE: 0.4541 | Val_Energy_MAE: 0.4454 | Time: 1178.0s  <- new best
+2026-10-21 17:39:29 [ethanol|improved|seed=42] Epoch 055/080 | Val_Force_MAE: 0.4578 | Val_Energy_MAE: 0.1155 | Time: 1156.7s
+2026-10-21 17:39:39 [uracil|baseline|seed=1002] Epoch 080/080 | Val_Force_MAE: 0.4694 | Val_Energy_MAE: 0.1306 | Time: 1226.9s  <- new best
+2026-10-21 17:39:43 [uracil|improved|seed=1001] Epoch 035/080 | Val_Force_MAE: 0.8817 | Val_Energy_MAE: 0.2565 | Time: 1238.0s
+2026-10-21 17:39:44 [uracil|baseline|seed=1002] Test_Energy_MAE: 0.1334
+2026-10-21 17:39:44 [uracil|baseline|seed=1002] Final_Test_MAE: 0.4711
+2026-10-21 17:39:44 [uracil|baseline|seed=1002] RUN END best_epoch=80 best_val_f_mae=0.4694 test_f_mae=0.4711 test_e_mae=0.1334 total_time_s=1232.4
+2026-10-21 17:39:44 [uracil|baseline|seed=1002] result written to scripts/painn_generalization/results/uracil_baseline_seed1002.json
+2026-10-21 17:39:54 [uracil|baseline|seed=1001] Epoch 065/080 | Val_Force_MAE: 0.5550 | Val_Energy_MAE: 0.3380 | Time: 1056.7s  <- new best
+2026-10-21 17:40:15 [uracil|improved|seed=1002] Epoch 035/080 | Val_Force_MAE: 0.6127 | Val_Energy_MAE: 0.2941 | Time: 1252.7s  <- new best
+2026-10-21 17:40:19 [uracil|baseline|seed=1003] Epoch 080/080 | Val_Force_MAE: 0.4504 | Val_Energy_MAE: 0.1878 | Time: 1246.3s  <- new best
+2026-10-21 17:40:24 [uracil|baseline|seed=1003] Test_Energy_MAE: 0.1668
+2026-10-21 17:40:24 [uracil|baseline|seed=1003] Final_Test_MAE: 0.4733
+2026-10-21 17:40:24 [uracil|baseline|seed=1003] RUN END best_epoch=80 best_val_f_mae=0.4504 test_f_mae=0.4733 test_e_mae=0.1668 total_time_s=1251.1
+2026-10-21 17:40:24 [uracil|baseline|seed=1003] result written to scripts/painn_generalization/results/uracil_baseline_seed1003.json
+2026-10-21 17:40:51 [uracil|improved|seed=1003] Epoch 035/080 | Val_Force_MAE: 0.7176 | Val_Energy_MAE: 0.2119 | Time: 1268.7s  <- new best
+2026-10-21 17:40:53 [ethanol|improved|seed=42] Epoch 060/080 | Val_Force_MAE: 0.3920 | Val_Energy_MAE: 0.0825 | Time: 1240.0s  <- new best
+2026-10-21 17:40:55 [uracil|baseline|seed=1001] Epoch 070/080 | Val_Force_MAE: 0.5045 | Val_Energy_MAE: 0.1521 | Time: 1118.1s  <- new best
+2026-10-21 17:41:00 [aspirin|improved|seed=42] Epoch 015/080 | Val_Force_MAE: 1.4467 | Val_Energy_MAE: 2.2502 | Time: 1231.4s  <- new best
+2026-10-21 17:41:04 [aspirin|baseline|seed=42] Epoch 035/080 | Val_Force_MAE: 1.1497 | Val_Energy_MAE: 8.6457 | Time: 1244.3s  <- new best
+2026-10-21 17:41:53 [uracil|baseline|seed=1001] Epoch 075/080 | Val_Force_MAE: 0.4905 | Val_Energy_MAE: 0.2182 | Time: 1176.0s  <- new best
+2026-10-21 17:42:01 [uracil|improved|seed=1001] Epoch 040/080 | Val_Force_MAE: 0.5414 | Val_Energy_MAE: 0.3018 | Time: 1376.3s  <- new best
+2026-10-21 17:42:08 [ethanol|improved|seed=42] Epoch 065/080 | Val_Force_MAE: 0.3757 | Val_Energy_MAE: 0.0708 | Time: 1314.9s  <- new best
+2026-10-21 17:42:29 [uracil|improved|seed=1002] Epoch 040/080 | Val_Force_MAE: 0.5309 | Val_Energy_MAE: 0.4319 | Time: 1386.8s  <- new best
+2026-10-21 17:42:50 [uracil|baseline|seed=1001] Epoch 080/080 | Val_Force_MAE: 0.4771 | Val_Energy_MAE: 0.1422 | Time: 1233.3s  <- new best
+2026-10-21 17:42:55 [uracil|baseline|seed=1001] Test_Energy_MAE: 0.1397
+2026-10-21 17:42:55 [uracil|baseline|seed=1001] Final_Test_MAE: 0.4820
+2026-10-21 17:42:55 [uracil|baseline|seed=1001] RUN END best_epoch=80 best_val_f_mae=0.4771 test_f_mae=0.4820 test_e_mae=0.1397 total_time_s=1237.6
+2026-10-21 17:42:55 [uracil|baseline|seed=1001] result written to scripts/painn_generalization/results/uracil_baseline_seed1001.json
+2026-10-21 17:43:03 [uracil|improved|seed=1003] Epoch 040/080 | Val_Force_MAE: 0.6042 | Val_Energy_MAE: 0.3135 | Time: 1401.4s  <- new best
+2026-10-21 17:43:12 [aspirin|baseline|seed=42] Epoch 040/080 | Val_Force_MAE: 1.1034 | Val_Energy_MAE: 4.5298 | Time: 1372.1s  <- new best
+2026-10-21 17:43:18 [ethanol|improved|seed=42] Epoch 070/080 | Val_Force_MAE: 0.3628 | Val_Energy_MAE: 0.0769 | Time: 1385.4s  <- new best
+2026-10-21 17:44:01 [uracil|improved|seed=1001] Epoch 045/080 | Val_Force_MAE: 0.5033 | Val_Energy_MAE: 0.2174 | Time: 1496.5s  <- new best
+2026-10-21 17:44:22 [ethanol|improved|seed=42] Epoch 075/080 | Val_Force_MAE: 0.3591 | Val_Energy_MAE: 0.0664 | Time: 1449.0s  <- new best
+2026-10-21 17:44:26 [uracil|improved|seed=1002] Epoch 045/080 | Val_Force_MAE: 0.6107 | Val_Energy_MAE: 0.8612 | Time: 1503.9s
+2026-10-21 17:44:57 [uracil|improved|seed=1003] Epoch 045/080 | Val_Force_MAE: 0.6084 | Val_Energy_MAE: 0.1607 | Time: 1514.8s
+2026-10-21 17:45:05 [aspirin|baseline|seed=42] Epoch 045/080 | Val_Force_MAE: 1.1781 | Val_Energy_MAE: 6.4666 | Time: 1484.7s
+2026-10-21 17:45:25 [ethanol|improved|seed=42] Epoch 080/080 | Val_Force_MAE: 0.3556 | Val_Energy_MAE: 0.0716 | Time: 1512.1s  <- new best
+2026-10-21 17:45:29 [ethanol|improved|seed=42] Test_Energy_MAE: 0.0815
+2026-10-21 17:45:29 [ethanol|improved|seed=42] Final_Test_MAE: 0.3494
+2026-10-21 17:45:29 [ethanol|improved|seed=42] RUN END best_epoch=80 best_val_f_mae=0.3556 test_f_mae=0.3494 test_e_mae=0.0815 total_time_s=1516.9
+2026-10-21 17:45:29 [ethanol|improved|seed=42] result written to scripts/painn_generalization/results/ethanol_improved_seed42.json
+2026-10-21 17:45:38 [aspirin|improved|seed=42] Epoch 020/080 | Val_Force_MAE: 1.2020 | Val_Energy_MAE: 2.7675 | Time: 1509.9s  <- new best
+2026-10-21 17:45:51 [uracil|improved|seed=1001] Epoch 050/080 | Val_Force_MAE: 0.4535 | Val_Energy_MAE: 0.2459 | Time: 1606.6s  <- new best
+2026-10-21 17:46:13 [uracil|improved|seed=1002] Epoch 050/080 | Val_Force_MAE: 0.4784 | Val_Energy_MAE: 0.1388 | Time: 1610.6s  <- new best
+2026-10-21 17:46:40 [uracil|improved|seed=1003] Epoch 050/080 | Val_Force_MAE: 0.4834 | Val_Energy_MAE: 0.1242 | Time: 1618.1s  <- new best
+2026-10-21 17:46:51 [aspirin|baseline|seed=42] Epoch 050/080 | Val_Force_MAE: 0.9997 | Val_Energy_MAE: 0.5504 | Time: 1591.3s  <- new best
+2026-10-21 17:47:30 [uracil|improved|seed=1001] Epoch 055/080 | Val_Force_MAE: 0.4055 | Val_Energy_MAE: 0.3042 | Time: 1705.1s  <- new best
+2026-10-21 17:47:52 [uracil|improved|seed=1002] Epoch 055/080 | Val_Force_MAE: 0.5164 | Val_Energy_MAE: 0.1727 | Time: 1709.8s
+2026-10-21 17:48:19 [uracil|improved|seed=1003] Epoch 055/080 | Val_Force_MAE: 0.4430 | Val_Energy_MAE: 0.2676 | Time: 1716.7s  <- new best
+2026-10-21 17:48:34 [aspirin|baseline|seed=42] Epoch 055/080 | Val_Force_MAE: 0.9401 | Val_Energy_MAE: 1.0657 | Time: 1693.9s  <- new best
+2026-10-21 17:49:08 [uracil|improved|seed=1001] Epoch 060/080 | Val_Force_MAE: 0.3592 | Val_Energy_MAE: 0.1522 | Time: 1803.6s  <- new best
+2026-10-21 17:49:27 [aspirin|improved|seed=42] Epoch 025/080 | Val_Force_MAE: 1.1553 | Val_Energy_MAE: 0.5648 | Time: 1738.6s  <- new best
+2026-10-21 17:49:31 [uracil|improved|seed=1002] Epoch 060/080 | Val_Force_MAE: 0.3801 | Val_Energy_MAE: 0.2009 | Time: 1808.7s  <- new best
+2026-10-21 17:49:58 [uracil|improved|seed=1003] Epoch 060/080 | Val_Force_MAE: 0.3830 | Val_Energy_MAE: 0.1298 | Time: 1815.9s  <- new best
+2026-10-21 17:50:19 [aspirin|baseline|seed=42] Epoch 060/080 | Val_Force_MAE: 0.9054 | Val_Energy_MAE: 0.6570 | Time: 1798.5s  <- new best
+2026-10-21 17:50:47 [uracil|improved|seed=1001] Epoch 065/080 | Val_Force_MAE: 0.3401 | Val_Energy_MAE: 0.1332 | Time: 1901.9s  <- new best
+2026-10-21 17:51:10 [uracil|improved|seed=1002] Epoch 065/080 | Val_Force_MAE: 0.3392 | Val_Energy_MAE: 0.2916 | Time: 1907.5s  <- new best
+2026-10-21 17:51:36 [uracil|improved|seed=1003] Epoch 065/080 | Val_Force_MAE: 0.3410 | Val_Energy_MAE: 0.1271 | Time: 1914.3s  <- new best
+2026-10-21 17:51:59 [aspirin|baseline|seed=42] Epoch 065/080 | Val_Force_MAE: 0.8772 | Val_Energy_MAE: 0.4482 | Time: 1899.1s  <- new best
+2026-10-21 17:52:25 [uracil|improved|seed=1001] Epoch 070/080 | Val_Force_MAE: 0.3228 | Val_Energy_MAE: 0.1308 | Time: 2000.5s  <- new best
+2026-10-21 17:52:48 [uracil|improved|seed=1002] Epoch 070/080 | Val_Force_MAE: 0.3280 | Val_Energy_MAE: 0.1310 | Time: 2006.0s  <- new best
+2026-10-21 17:53:14 [uracil|improved|seed=1003] Epoch 070/080 | Val_Force_MAE: 0.3219 | Val_Energy_MAE: 0.1415 | Time: 2011.9s  <- new best
+2026-10-21 17:53:21 [aspirin|improved|seed=42] Epoch 030/080 | Val_Force_MAE: 1.0177 | Val_Energy_MAE: 0.5040 | Time: 1972.2s  <- new best
+2026-10-21 17:53:41 [aspirin|baseline|seed=42] Epoch 070/080 | Val_Force_MAE: 0.8435 | Val_Energy_MAE: 0.4962 | Time: 2000.5s  <- new best
+2026-10-21 17:54:05 [uracil|improved|seed=1001] Epoch 075/080 | Val_Force_MAE: 0.3128 | Val_Energy_MAE: 0.1430 | Time: 2099.8s  <- new best
+2026-10-21 17:54:27 [uracil|improved|seed=1002] Epoch 075/080 | Val_Force_MAE: 0.3165 | Val_Energy_MAE: 0.1380 | Time: 2104.6s  <- new best
+2026-10-21 17:54:52 [uracil|improved|seed=1003] Epoch 075/080 | Val_Force_MAE: 0.3108 | Val_Energy_MAE: 0.1241 | Time: 2110.3s  <- new best
+2026-10-21 17:55:23 [aspirin|baseline|seed=42] Epoch 075/080 | Val_Force_MAE: 0.8104 | Val_Energy_MAE: 0.4216 | Time: 2102.7s  <- new best
+2026-10-21 17:55:43 [uracil|improved|seed=1001] Epoch 080/080 | Val_Force_MAE: 0.3034 | Val_Energy_MAE: 0.1346 | Time: 2198.2s  <- new best
+2026-10-21 17:55:50 [uracil|improved|seed=1001] Test_Energy_MAE: 0.1196
+2026-10-21 17:55:50 [uracil|improved|seed=1001] Final_Test_MAE: 0.3022
+2026-10-21 17:55:50 [uracil|improved|seed=1001] RUN END best_epoch=80 best_val_f_mae=0.3034 test_f_mae=0.3022 test_e_mae=0.1196 total_time_s=2205.2
+2026-10-21 17:55:50 [uracil|improved|seed=1001] result written to scripts/painn_generalization/results/uracil_improved_seed1001.json
+2026-10-21 17:56:03 [uracil|improved|seed=1002] Epoch 080/080 | Val_Force_MAE: 0.3032 | Val_Energy_MAE: 0.1230 | Time: 2200.5s  <- new best
+2026-10-21 17:56:09 [uracil|improved|seed=1002] Test_Energy_MAE: 0.1166
+2026-10-21 17:56:09 [uracil|improved|seed=1002] Final_Test_MAE: 0.3101
+2026-10-21 17:56:09 [uracil|improved|seed=1002] RUN END best_epoch=80 best_val_f_mae=0.3032 test_f_mae=0.3101 test_e_mae=0.1166 total_time_s=2206.6
+2026-10-21 17:56:09 [uracil|improved|seed=1002] result written to scripts/painn_generalization/results/uracil_improved_seed1002.json
+2026-10-21 17:56:23 [uracil|improved|seed=1003] Epoch 080/080 | Val_Force_MAE: 0.3075 | Val_Energy_MAE: 0.1216 | Time: 2201.3s  <- new best
+2026-10-21 17:56:29 [uracil|improved|seed=1003] Test_Energy_MAE: 0.1202
+2026-10-21 17:56:29 [uracil|improved|seed=1003] Final_Test_MAE: 0.3136
+2026-10-21 17:56:29 [uracil|improved|seed=1003] RUN END best_epoch=80 best_val_f_mae=0.3075 test_f_mae=0.3136 test_e_mae=0.1202 total_time_s=2206.7
+2026-10-21 17:56:29 [uracil|improved|seed=1003] result written to scripts/painn_generalization/results/uracil_improved_seed1003.json
+2026-10-21 17:57:00 [aspirin|improved|seed=42] Epoch 035/080 | Val_Force_MAE: 0.7884 | Val_Energy_MAE: 0.5340 | Time: 2191.0s  <- new best
+2026-10-21 17:57:01 [aspirin|baseline|seed=42] Epoch 080/080 | Val_Force_MAE: 0.8078 | Val_Energy_MAE: 0.4868 | Time: 2200.4s  <- new best
+2026-10-21 17:57:08 [aspirin|baseline|seed=42] Test_Energy_MAE: 0.4372
+2026-10-21 17:57:08 [aspirin|baseline|seed=42] Final_Test_MAE: 0.8202
+2026-10-21 17:57:08 [aspirin|baseline|seed=42] RUN END best_epoch=80 best_val_f_mae=0.8078 test_f_mae=0.8202 test_e_mae=0.4372 total_time_s=2208.2
+2026-10-21 17:57:08 [aspirin|baseline|seed=42] result written to scripts/painn_generalization/results/aspirin_baseline_seed42.json
+2026-10-21 17:59:49 [aspirin|improved|seed=42] Epoch 040/080 | Val_Force_MAE: 0.7260 | Val_Energy_MAE: 0.4480 | Time: 2360.1s  <- new best
+2026-10-21 18:02:37 [aspirin|improved|seed=42] Epoch 045/080 | Val_Force_MAE: 0.7767 | Val_Energy_MAE: 1.3750 | Time: 2528.1s
+2026-10-21 18:05:26 [aspirin|improved|seed=42] Epoch 050/080 | Val_Force_MAE: 0.6816 | Val_Energy_MAE: 0.4525 | Time: 2697.0s  <- new best
+2026-10-21 18:08:13 [aspirin|improved|seed=42] Epoch 055/080 | Val_Force_MAE: 0.6345 | Val_Energy_MAE: 0.3538 | Time: 2864.5s  <- new best
+2026-10-21 18:11:00 [aspirin|improved|seed=42] Epoch 060/080 | Val_Force_MAE: 0.5733 | Val_Energy_MAE: 0.3408 | Time: 3031.6s  <- new best
+2026-10-21 18:13:48 [aspirin|improved|seed=42] Epoch 065/080 | Val_Force_MAE: 0.5636 | Val_Energy_MAE: 0.3893 | Time: 3199.4s  <- new best
+2026-10-21 18:16:35 [aspirin|improved|seed=42] Epoch 070/080 | Val_Force_MAE: 0.5477 | Val_Energy_MAE: 0.3674 | Time: 3366.0s  <- new best
+2026-10-21 18:19:20 [aspirin|improved|seed=42] Epoch 075/080 | Val_Force_MAE: 0.5375 | Val_Energy_MAE: 0.3124 | Time: 3531.8s  <- new best
+2026-10-21 18:22:10 [aspirin|improved|seed=42] Epoch 080/080 | Val_Force_MAE: 0.5357 | Val_Energy_MAE: 0.2960 | Time: 3701.4s  <- new best
+2026-10-21 18:22:26 [aspirin|improved|seed=42] Test_Energy_MAE: 0.2525
+2026-10-21 18:22:26 [aspirin|improved|seed=42] Final_Test_MAE: 0.5550
+2026-10-21 18:22:26 [aspirin|improved|seed=42] RUN END best_epoch=80 best_val_f_mae=0.5357 test_f_mae=0.5550 test_e_mae=0.2525 total_time_s=3717.3
+2026-10-21 18:22:26 [aspirin|improved|seed=42] result written to scripts/painn_generalization/results/aspirin_improved_seed42.json
+
+================================================================================
+FINAL AGGREGATE SUMMARY (all 10/10 runs complete, generated post-hoc from result JSONs)
+================================================================================
+Phase A — Uracil multi-seed replication (seeds 1001, 1002, 1003; split=optimized_code/painn/data/md17_uracil_split.npz)
+  PaiNN baseline (reproduced, --src-path scripts/painn_generalization/baseline_src):
+    seed=1001: test_f_mae=0.4820  test_e_mae=0.1397
+    seed=1002: test_f_mae=0.4711  test_e_mae=0.1334
+    seed=1003: test_f_mae=0.4733  test_e_mae=0.1668
+    mean +/- pstdev: Force MAE = 0.4754 +/- 0.0047 | Energy MAE = 0.1466 +/- 0.0145
+  This work / improved (--src-path optimized_code/painn/src, HEAD=_best=c5c1199498):
+    seed=1001: test_f_mae=0.3022  test_e_mae=0.1196
+    seed=1002: test_f_mae=0.3101  test_e_mae=0.1166
+    seed=1003: test_f_mae=0.3136  test_e_mae=0.1202
+    mean +/- pstdev: Force MAE = 0.3086 +/- 0.0048 | Energy MAE = 0.1188 +/- 0.0016
+  Relative Force MAE reduction (multi-seed means): 35.1%  (cf. original single-seed-42 value: 36.6%, within 1 sd)
+
+Phase B — Cross-molecule zero-tuning generalization (seed=42, code/hyperparameters unchanged from uracil protocol)
+  Ethanol (9 atoms, split=data_cache/generalization_splits/md17_ethanol_split.npz, 950/50/1000, leak-checked):
+    baseline:  test_f_mae=0.4861  test_e_mae=0.1138
+    improved:  test_f_mae=0.3494  test_e_mae=0.0815
+    Relative Force MAE reduction: 28.1%
+  Aspirin (21 atoms, split=data_cache/generalization_splits/md17_aspirin_split.npz, 950/50/1000, leak-checked):
+    baseline:  test_f_mae=0.8202  test_e_mae=0.4372
+    improved:  test_f_mae=0.5550  test_e_mae=0.2525
+    Relative Force MAE reduction: 32.3%
+
+Conclusion: the architectural improvement (hybrid Gaussian-Bessel RBF + invariant inner-product
+geometric gate + bidirectional center-neighbor coupling + signed tanh gate) is (a) reproducible
+across three independent seeds never used during architecture search, with the multi-seed-mean
+reduction (35.1%) matching the original single-seed result (36.6%) within one standard deviation,
+and (b) transfers with zero additional tuning to two MD17 molecules never used during architecture
+search (ethanol: -28.1%, aspirin: -32.3%), indicating the gain is not an artefact of single-seed
+training-noise luck nor of architecture selection biased toward uracil's specific geometry.
+All 10 runs: CPU-only (no GPU available in this environment), --threads 2, 80 epochs, val-every=5,
+protocol otherwise identical to optimized_code/painn/eval_benchmark.py. Protected files
+(eval_benchmark.py, data/md17_uracil_split.npz) were not modified in any run.
+Paper updated: papers/painn_sci/main.tex (abstract, Table 2 "tab:multiseed", Table 3 "tab:crossmol",
+Limitations, Outlook, Conclusions). Recompiled: papers/painn_sci/main.pdf (20 pages, xelatex, 0 errors).
+================================================================================

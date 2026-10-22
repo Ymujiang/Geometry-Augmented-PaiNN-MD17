@@ -1,0 +1,103 @@
+{
+  "molecule": "aspirin",
+  "arch": "baseline",
+  "seed": 42,
+  "split_npz": "/home/ymujdb/my_sota_project/data_cache/generalization_splits/md17_aspirin_split.npz",
+  "src_path": "/home/ymujdb/my_sota_project/scripts/painn_generalization/baseline_src",
+  "painn_py_file": "/home/ymujdb/my_sota_project/scripts/painn_generalization/baseline_src/schnetpack/representation/painn.py",
+  "n_atoms": 21,
+  "n_train": 950,
+  "n_val": 50,
+  "n_test": 1000,
+  "n_params": 589057,
+  "epochs": 80,
+  "best_epoch": 80,
+  "best_val_f_mae": 0.8077572389632937,
+  "best_val_e_mae": 0.48680572509765624,
+  "test_f_mae": 0.820167495969742,
+  "test_e_mae": 0.4371963958740234,
+  "total_time_s": 2208.161894083023,
+  "device": "cpu",
+  "val_history": [
+    {
+      "epoch": 5,
+      "val_f_mae": 2.9452672371031747,
+      "val_e_mae": 20.7279248046875
+    },
+    {
+      "epoch": 10,
+      "val_f_mae": 3.2133401537698414,
+      "val_e_mae": 4.035047912597657
+    },
+    {
+      "epoch": 15,
+      "val_f_mae": 2.0025829303075398,
+      "val_e_mae": 32.08611328125
+    },
+    {
+      "epoch": 20,
+      "val_f_mae": 1.5256863839285715,
+      "val_e_mae": 13.350404052734374
+    },
+    {
+      "epoch": 25,
+      "val_f_mae": 1.7061363777281746,
+      "val_e_mae": 5.495092163085937
+    },
+    {
+      "epoch": 30,
+      "val_f_mae": 1.4670284598214285,
+      "val_e_mae": 1.0039107513427734
+    },
+    {
+      "epoch": 35,
+      "val_f_mae": 1.1496586681547618,
+      "val_e_mae": 8.645665283203124
+    },
+    {
+      "epoch": 40,
+      "val_f_mae": 1.1034178137400794,
+      "val_e_mae": 4.5298388671875
+    },
+    {
+      "epoch": 45,
+      "val_f_mae": 1.1780718315972223,
+      "val_e_mae": 6.4666290283203125
+    },
+    {
+      "epoch": 50,
+      "val_f_mae": 0.9996986607142857,
+      "val_e_mae": 0.5503711700439453
+    },
+    {
+      "epoch": 55,
+      "val_f_mae": 0.9400606088789683,
+      "val_e_mae": 1.0657427215576172
+    },
+    {
+      "epoch": 60,
+      "val_f_mae": 0.9053848896329365,
+      "val_e_mae": 0.6569651794433594
+    },
+    {
+      "epoch": 65,
+      "val_f_mae": 0.8772061011904762,
+      "val_e_mae": 0.44822456359863283
+    },
+    {
+      "epoch": 70,
+      "val_f_mae": 0.843504154265873,
+      "val_e_mae": 0.4961783218383789
+    },
+    {
+      "epoch": 75,
+      "val_f_mae": 0.8104343377976191,
+      "val_e_mae": 0.421584358215332
+    },
+    {
+      "epoch": 80,
+      "val_f_mae": 0.8077572389632937,
+      "val_e_mae": 0.48680572509765624
+    }
+  ]
+}
