@@ -53,7 +53,7 @@ the paper.
 | 2 | + Three-body inner-product gate | 0.3430 | −16.0% | 0.1317 | accepted |
 | 3 | + Bidirectional center–neighbor | 0.3375 | −1.6% | 0.1216 | accepted |
 | 4 | + Signed tanh gate activation | 0.3021 | −10.5% | 0.1182 | accepted |
-| — | Final restored best state (re-evaluated) | 0.3013 | — | 0.1211 | final |
+| — | Fresh retrain of step-4 architecture (headline result) | 0.3013 | — | 0.1211 | final |
 | A | Multi-scale JK pooling + vector readout | 0.3809 | +11.1% | 0.1268 | rolled back |
 | B | Deeper 2-layer MLP filter (40–80–384) | 0.3403 | +0.8% | 0.1204 | rolled back |
 | C | LayerNorm in interaction and mixing | 0.3392 | +0.5% | 0.1274 | rolled back |
@@ -131,8 +131,15 @@ the paper.
 Two environments are used, pinned in `reproducibility_artifact/`:
 
 - **Training/evaluation** (`requirements_lock_training_env.txt`): Python
-  3.10.21, PyTorch 2.14.1+cu130, run CPU-only. This is the environment that
-  produced every MAE number in the paper.
+  3.10.21, PyTorch 2.14.1+cu130. The supplementary multi-seed, cross-molecule
+  and gate-comparison runs hardcode `torch.device("cpu")` and were executed
+  CPU-only. The original ten-step architecture-search campaign did not
+  hardcode a device and was written to use a GPU automatically via
+  `torch.cuda.is_available()` when present; we cannot now determine with
+  certainty whether a GPU was used for some or all of those earlier runs
+  (see `reproducibility_artifact/README_REPRODUCE.md` for the full
+  disclosure). This does not affect the reported accuracy comparisons, since
+  relative force and energy MAE do not depend on the compute device.
 - **Plotting/verification** (`requirements_lock.txt`): a lighter
   matplotlib/numpy-based environment used only for figure generation and the
   atom-mapping / equivariance verification scripts, never for training.

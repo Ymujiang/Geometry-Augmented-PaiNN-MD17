@@ -72,7 +72,7 @@ waterfall_labels = [
     "+Sigmoid\ngeo-gate",
     "+Bidirectional\nmessage",
     "+Tanh\ngeo-gate",
-    "Restored\n(same model)",
+    "Fresh retrain\n(step-4 arch.)",
 ]
 values = [by_tag[t]["final_test_mae"] for t in waterfall_order]
 

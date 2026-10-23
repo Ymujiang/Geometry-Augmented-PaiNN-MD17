@@ -21,7 +21,18 @@ or hand-entered.
 
 - OS: Ubuntu 22.04.5 LTS (observed on WSL2, kernel 6.6.87.2-microsoft-standard-WSL2; the code has no WSL-specific dependency).
 - Python: 3.10.21 (training environment, `cgcnn_env`).
-- PyTorch: 2.14.1+cu130, **run CPU-only** (`torch.cuda.is_available() == False` in the environment used for every reported run; no GPU was used or available). This is disclosed in `main.tex` §Experimental protocol and does not affect correctness, since every architecture compared is trained and evaluated on the same hardware.
+- PyTorch: 2.14.1+cu130. The supplementary multi-seed, cross-molecule and
+  gate-comparison runs (`run_experiment.py`, `train_and_extract.py`) hardcode
+  `torch.device("cpu")` and were executed CPU-only, with no GPU present or
+  used, as recorded in their logs. The original ten-step architecture-search
+  campaign (`eval_benchmark.py`) did not hardcode a device and was written to
+  use a GPU automatically via `torch.cuda.is_available()` when present; we
+  cannot now determine with certainty whether a GPU was used for some or all
+  of those earlier runs. This does not affect the reported accuracy
+  comparisons, since relative force and energy MAE do not depend on the
+  compute device, but absolute wall-clock timings should not be assumed
+  uniform across every stage of the project (see `main.tex`
+  §Experimental protocol for the full disclosure).
 - Full training-environment dependency list: `requirements_lock_training_env.txt` (112 packages, includes `schnetpack`-derived code, `ase`, `pytorch-lightning`, etc., frozen from the exact environment that produced the numbers in the paper).
 - Plotting/verification-environment dependency list: `requirements_lock.txt` (26 packages, matplotlib/numpy-based, used only for figure generation and the atom-mapping verification script, never for training).
 
@@ -85,16 +96,28 @@ python eval_benchmark.py
 
 To reproduce the **reproduced-baseline** numbers instead, point the same
 protocol at the `_baseline`-tagged source tree
-(`scripts/painn_generalization/baseline_src/`), e.g. via
-`scripts/painn_generalization/run_experiment.py --src-path
-scripts/painn_generalization/baseline_src --molecule uracil --seed 42`.
+(`scripts/painn_generalization/baseline_src/`) using
+`scripts/painn_generalization/run_experiment.py`, e.g.:
+```bash
+cd /home/ymujdb/my_sota_project
+python scripts/painn_generalization/run_experiment.py \
+  --molecule uracil --arch baseline --seed 42 \
+  --split-npz optimized_code/painn/data/md17_uracil_split.npz \
+  --src-path scripts/painn_generalization/baseline_src \
+  --log-file scripts/painn_generalization/results/run.log \
+  --out-json scripts/painn_generalization/results/uracil_baseline_seed42.json
+```
 Expected: test force MAE ≈ 0.4755, test energy MAE ≈ 0.1973.
+`--molecule`, `--arch`, `--seed`, `--split-npz`, `--src-path`, `--log-file`
+and `--out-json` are all required by the script; omitting any of them exits
+with an argparse error rather than silently falling back to a default.
 
 ## 5. One-click reproduction of the supplementary multi-seed and cross-molecule results (§3.2)
 
 ```bash
 cd /home/ymujdb/my_sota_project
 conda activate cgcnn_env
+mkdir -p scripts/painn_generalization/results
 
 # Multi-seed replication on uracil (Table 2): 3 seeds never used during
 # architecture search, for both the reproduced baseline and the final
@@ -104,8 +127,11 @@ for seed in 1001 1002 1003; do
     src="optimized_code/painn/src"
     [ "$variant" = "baseline" ] && src="scripts/painn_generalization/baseline_src"
     python scripts/painn_generalization/run_experiment.py \
-      --src-path "$src" --molecule uracil --seed "$seed" \
-      --out scripts/painn_generalization/results/uracil_${variant}_seed${seed}.json
+      --molecule uracil --arch "$variant" --seed "$seed" \
+      --split-npz optimized_code/painn/data/md17_uracil_split.npz \
+      --src-path "$src" \
+      --log-file scripts/painn_generalization/results/run.log \
+      --out-json scripts/painn_generalization/results/uracil_${variant}_seed${seed}.json
   done
 done
 
@@ -116,11 +142,17 @@ for molecule in ethanol aspirin; do
     src="optimized_code/painn/src"
     [ "$variant" = "baseline" ] && src="scripts/painn_generalization/baseline_src"
     python scripts/painn_generalization/run_experiment.py \
-      --src-path "$src" --molecule "$molecule" --seed 42 \
-      --out scripts/painn_generalization/results/${molecule}_${variant}_seed42.json
+      --molecule "$molecule" --arch "$variant" --seed 42 \
+      --split-npz "data_cache/generalization_splits/md17_${molecule}_split.npz" \
+      --src-path "$src" \
+      --log-file scripts/painn_generalization/results/run.log \
+      --out-json scripts/painn_generalization/results/${molecule}_${variant}_seed42.json
   done
 done
 ```
+`--molecule`, `--arch`, `--split-npz`, `--src-path`, `--log-file` and
+`--out-json` must all be passed explicitly on every invocation; the script
+has no default for any of them.
 
 Each run reproduces one row of Table 2 or Table 3 in `main.tex`. No
 architecture search, hyperparameter tuning, or epoch-budget change was
@@ -160,8 +192,14 @@ best-validation-epoch in-memory state and does not checkpoint to disk.
 Re-running Figure 4 from the raw `.npz` therefore reproduces the figure
 exactly from already-recorded real predictions; regenerating the predictions
 themselves from scratch requires re-running the training protocol in
-§4 above and re-exporting per-atom predictions with
-`scripts/painn_sci_scratch/train_and_extract.py --variant final`.
+§4 above and re-exporting per-atom predictions with:
+```bash
+cd /home/ymujdb/my_sota_project
+.autosota/venv/bin/python scripts/painn_sci_scratch/train_and_extract.py \
+  --variant final --out-dir papers/painn_sci/data/raw
+```
+(`--variant sigmoid` instead reproduces the sigmoid-gated control run used
+in Figure 1D; both `--variant` and `--out-dir` are required arguments.)
 
 ## 7. What is NOT included in this artifact
 
