@@ -11,16 +11,27 @@ PaiNN SCI 深度数据提取脚本（一次性训练 + 推理 + 仪表化提取�
 
 本脚本在上述协议基础上【仅新增只读式仪表化】，不修改 optimized_code/ 下任何文件：
   1. 通过 sys.path 注入指定的 src 树（与 eval_benchmark.py 完全相同的技巧）来选择
-     使用"最终 tanh 门控版本"还是"iter-4 sigmoid 门控版本"的 painn.py。
-  2. 用 register_forward_hook 挂载在每个 PaiNNInteraction.geo_gate_net（Dense 线性层）
-     上，捕获其输出的"门控原始 logit"（线性层输出，位于 tanh/sigmoid 之前）。
-     —— 这是非侵入式监听，不修改任何 forward() 源码逻辑。
+     使用"最终 tanh 门控版本"、"iter-4 sigmoid 门控版本"，还是未经任何架构改动的
+     "_baseline (f4683fcc) 原始 PaiNN 版本"的 painn.py。
+  2. 对于具有几何门控（final / sigmoid）的版本，用 register_forward_hook 挂载在每个
+     PaiNNInteraction.geo_gate_net（Dense 线性层）上，捕获其输出的"门控原始 logit"
+     （线性层输出，位于 tanh/sigmoid 之前）——这是非侵入式监听，不修改任何 forward()
+     源码逻辑。baseline 架构本身没有几何门控子模块（它是未经任何本文修改的原始
+     PaiNN），因此该变体跳过门控 logit 提取，只产出 predictions_baseline.npz /
+     training_curve_baseline.json，不产出 gate_activation_baseline.json。
   3. 测试集推理时，对每个样本的 12 个原子分别保存预测力 / 真实力 / 预测能量 / 真实能量，
      用于逐原子类型与逐化学微环境的误差分解。
 
 用法：
   /home/ymujdb/miniconda3/envs/cgcnn_env/bin/python train_and_extract.py --variant final --out-dir <dir>
   /home/ymujdb/miniconda3/envs/cgcnn_env/bin/python train_and_extract.py --variant sigmoid --out-dir <dir>
+  /home/ymujdb/miniconda3/envs/cgcnn_env/bin/python train_and_extract.py --variant baseline --out-dir <dir>
+
+baseline 变体使用的 src 树是 scripts/painn_generalization/baseline_src/schnetpack
+（已在此前的跨分子/多种子实验中构建并校验：与 optimized_code/painn 仓库
+_baseline 标签 (commit f4683fcc) 下的 src/schnetpack/representation/painn.py
+逐字节相同，diff 为空）。它不是 optimized_code/ 的一部分，不受保护文件约束，
+读取只读。
 """
 import os
 import sys
@@ -36,6 +47,7 @@ import torch.nn.functional as F
 
 PAINN_REPO = "/home/ymujdb/my_sota_project/optimized_code/painn"
 SIGMOID_SRC = "/tmp/painn_sci_src_sigmoid/src"
+BASELINE_SRC = "/home/ymujdb/my_sota_project/github_repo_painn/src/baseline_architecture"
 
 
 def set_seed(seed: int = 42):
@@ -97,8 +109,9 @@ def evaluate(model, R_data, E_data, F_data, Z_single, cutoff, batch_size, device
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--variant", choices=["final", "sigmoid"], required=True,
-                     help="final = 当前 _best (tanh geometric gate); sigmoid = iter-4 (sigmoid geometric gate) 对照组")
+    ap.add_argument("--variant", choices=["final", "sigmoid", "baseline"], required=True,
+                     help="final = 当前 _best (tanh geometric gate); sigmoid = iter-4 (sigmoid geometric gate) 对照组; "
+                          "baseline = _baseline (f4683fcc, 未经任何本文架构修改的原始 PaiNN)")
     ap.add_argument("--out-dir", required=True)
     args = ap.parse_args()
 
@@ -111,12 +124,17 @@ def main():
         if mod_name == "schnetpack" or mod_name.startswith("schnetpack."):
             del sys.modules[mod_name]
 
+    has_geo_gate = True
     if args.variant == "final":
         src_path = os.path.join(PAINN_REPO, "src")
         gate_activation_name = "tanh"
-    else:
+    elif args.variant == "sigmoid":
         src_path = SIGMOID_SRC
         gate_activation_name = "sigmoid"
+    else:  # baseline
+        src_path = BASELINE_SRC
+        gate_activation_name = None
+        has_geo_gate = False
 
     sys.path.insert(0, src_path)
 
@@ -240,9 +258,10 @@ def main():
             gate_logits_per_layer[layer_idx].append(out.detach().cpu().numpy())
         return hook
 
-    for li, interaction in enumerate(model.representation.interactions):
-        h = interaction.geo_gate_net.register_forward_hook(make_hook(li))
-        hooks.append(h)
+    if has_geo_gate:
+        for li, interaction in enumerate(model.representation.interactions):
+            h = interaction.geo_gate_net.register_forward_hook(make_hook(li))
+            hooks.append(h)
 
     # 同样不能用 no_grad() —— forces 来自对 energy 的 autograd 求导。
     model.eval()
@@ -273,9 +292,6 @@ def main():
     all_pred_e = np.concatenate(all_pred_e, axis=0)
     all_true_e = np.concatenate(all_true_e, axis=0)
 
-    # 拼接每层门控 logits: list of (n_pairs_in_batch, 1, 3*n_atom_basis)
-    gate_logits_concat = [np.concatenate(layer_list, axis=0) for layer_list in gate_logits_per_layer]
-
     np.savez_compressed(
         os.path.join(args.out_dir, f"predictions_{args.variant}.npz"),
         pred_forces=all_pred_f,
@@ -286,6 +302,24 @@ def main():
         test_f_mae=test_f_mae,
         test_e_mae=test_e_mae,
     )
+
+    with open(os.path.join(args.out_dir, f"training_curve_{args.variant}.json"), "w") as f:
+        json.dump({
+            "variant": args.variant,
+            "epoch_log": epoch_log,
+            "test_f_mae": test_f_mae,
+            "test_e_mae": test_e_mae,
+            "best_val_f_mae": best_val_f_mae,
+        }, f, indent=2)
+
+    if not has_geo_gate:
+        print(f"[done] variant={args.variant} (no geometric gate in this architecture; "
+              f"skipping gate_activation_{args.variant}.json) 已写出 predictions_/training_curve_ "
+              f"到 {args.out_dir}")
+        return
+
+    # 拼接每层门控 logits: list of (n_pairs_in_batch, 1, 3*n_atom_basis)
+    gate_logits_concat = [np.concatenate(layer_list, axis=0) for layer_list in gate_logits_per_layer]
 
     # 门控 logits 体积可能很大 (n_pairs x 384)，只保存统计摘要 + 下采样样本用于绘图
     gate_summary = {}
@@ -313,15 +347,6 @@ def main():
             "n_interactions": n_interactions,
             "layers": gate_summary,
         }, f)
-
-    with open(os.path.join(args.out_dir, f"training_curve_{args.variant}.json"), "w") as f:
-        json.dump({
-            "variant": args.variant,
-            "epoch_log": epoch_log,
-            "test_f_mae": test_f_mae,
-            "test_e_mae": test_e_mae,
-            "best_val_f_mae": best_val_f_mae,
-        }, f, indent=2)
 
     print(f"[done] variant={args.variant} 已写出 predictions_/gate_activation_/training_curve_ 到 {args.out_dir}")
 

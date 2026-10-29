@@ -117,6 +117,16 @@ def main():
     ap.add_argument("--out-json", required=True, help="per-run structured result json")
     ap.add_argument("--threads", type=int, default=4)
     ap.add_argument("--val-every", type=int, default=5)
+    ap.add_argument("--save-checkpoint", default=None,
+                     help="optional path to save the best-validation-epoch model "
+                          "state dict (torch.save) after the run completes. Purely "
+                          "additive instrumentation: saving happens after the fixed "
+                          "80-epoch training/evaluation protocol is finished and does "
+                          "not alter training, selection, or evaluation logic in any "
+                          "way. Previously run campaigns (eval_benchmark.py and this "
+                          "script's own supplementary runs) did not save a checkpoint "
+                          "and their numbers are unaffected retroactively; this flag "
+                          "only affects runs launched with it from now on.")
     ap.add_argument("--epochs-override", type=int, default=None,
                      help="SMOKE-TEST ONLY: override the protocol's 80 epochs. "
                           "Must never be used for a reported result.")
@@ -259,6 +269,34 @@ def main():
     test_f_mae, test_e_mae = evaluate(model, R_test, E_test, F_test, Z_single, cutoff, 100, device, properties)
     total_time = time.time() - t0
 
+    # Optional checkpoint save: additive only, runs after the
+    # best-validation-epoch state has already been selected and evaluated
+    # above by the unchanged protocol. Writing to disk here cannot influence
+    # best_epoch, best_val_f_mae, test_f_mae, or test_e_mae, which are already
+    # computed. Absent --save-checkpoint, behaviour is identical to before this
+    # option was added (no file is written, matching every run already reported
+    # in the paper).
+    checkpoint_path = None
+    if args.save_checkpoint is not None and best_state is not None:
+        checkpoint_path = os.path.abspath(args.save_checkpoint)
+        os.makedirs(os.path.dirname(checkpoint_path) or ".", exist_ok=True)
+        torch.save(
+            {
+                "model_state_dict": best_state,
+                "best_epoch": best_epoch,
+                "best_val_f_mae": best_val_f_mae,
+                "best_val_e_mae": best_val_e_mae_at_best,
+                "test_f_mae": test_f_mae,
+                "test_e_mae": test_e_mae,
+                "molecule": args.molecule,
+                "arch": args.arch,
+                "seed": args.seed,
+                "src_path": os.path.abspath(args.src_path),
+            },
+            checkpoint_path,
+        )
+        log(f"checkpoint saved to {checkpoint_path} (best_epoch={best_epoch})")
+
     log(f"Test_Energy_MAE: {test_e_mae:.4f}")
     log(f"Final_Test_MAE: {test_f_mae:.4f}")
     log(f"RUN END best_epoch={best_epoch} best_val_f_mae={best_val_f_mae:.4f} "
@@ -285,6 +323,7 @@ def main():
         "total_time_s": total_time,
         "device": str(device),
         "val_history": val_history,
+        "checkpoint_path": checkpoint_path,
     }
     with open(args.out_json, "w") as f:
         json.dump(result, f, indent=2)

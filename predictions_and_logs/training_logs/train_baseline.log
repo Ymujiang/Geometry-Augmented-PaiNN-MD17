@@ -1,0 +1,23 @@
+/home/ymujdb/miniconda3/envs/cgcnn_env/lib/python3.10/site-packages/torch/jit/_script.py:1491: FutureWarning: `torch.jit.script` is deprecated. Please switch to `torch.compile` or `torch.export`.
+  warnings.warn(
+[info] variant=baseline  schnetpack from: /home/ymujdb/my_sota_project/scripts/painn_generalization/baseline_src/schnetpack/__init__.py
+[info] gate activation (known from source checkout) = None
+Epoch 005/080 | Val_Force_MAE: 2.4316 | Val_Energy_MAE: 8.7249 | Time: 17.0s
+Epoch 010/080 | Val_Force_MAE: 2.7743 | Val_Energy_MAE: 2.8939 | Time: 32.4s
+Epoch 015/080 | Val_Force_MAE: 1.4355 | Val_Energy_MAE: 0.3715 | Time: 49.5s
+Epoch 020/080 | Val_Force_MAE: 1.4097 | Val_Energy_MAE: 7.9449 | Time: 65.9s
+Epoch 025/080 | Val_Force_MAE: 1.2805 | Val_Energy_MAE: 1.5231 | Time: 80.7s
+Epoch 030/080 | Val_Force_MAE: 1.3108 | Val_Energy_MAE: 2.0437 | Time: 94.8s
+Epoch 035/080 | Val_Force_MAE: 1.0217 | Val_Energy_MAE: 0.9924 | Time: 109.6s
+Epoch 040/080 | Val_Force_MAE: 0.7964 | Val_Energy_MAE: 4.5110 | Time: 125.7s
+Epoch 045/080 | Val_Force_MAE: 0.7559 | Val_Energy_MAE: 1.5507 | Time: 141.4s
+Epoch 050/080 | Val_Force_MAE: 0.7304 | Val_Energy_MAE: 1.5583 | Time: 156.0s
+Epoch 055/080 | Val_Force_MAE: 0.6258 | Val_Energy_MAE: 0.8380 | Time: 171.0s
+Epoch 060/080 | Val_Force_MAE: 0.5903 | Val_Energy_MAE: 0.2302 | Time: 261.1s
+Epoch 065/080 | Val_Force_MAE: 0.5463 | Val_Energy_MAE: 0.4031 | Time: 276.3s
+Epoch 070/080 | Val_Force_MAE: 0.5218 | Val_Energy_MAE: 0.5507 | Time: 291.4s
+Epoch 075/080 | Val_Force_MAE: 0.4908 | Val_Energy_MAE: 0.2060 | Time: 311.8s
+Epoch 080/080 | Val_Force_MAE: 0.4799 | Val_Energy_MAE: 0.2512 | Time: 326.2s
+Test_Energy_MAE: 0.2425
+Final_Test_MAE: 0.4927
+[done] variant=baseline (no geometric gate in this architecture; skipping gate_activation_baseline.json) 已写出 predictions_/training_curve_ 到 /home/ymujdb/my_sota_project/papers/painn_sci/data/raw
